@@ -1752,6 +1752,7 @@ public:
     void publishOdometry()
     {
         // Publish odometry for ROS (global)
+        // 当前的全局位姿给 laserOdometryROS 并发布
         nav_msgs::Odometry laserOdometryROS;
         laserOdometryROS.header.stamp = timeLaserInfoStamp;
         laserOdometryROS.header.frame_id = odometryFrame;
@@ -1763,6 +1764,7 @@ public:
         pubLaserOdometryGlobal.publish(laserOdometryROS);
         
         // Publish TF
+        // 发布odom -> lidar_link 的tf
         static tf::TransformBroadcaster br;
         tf::Transform t_odom_to_lidar = tf::Transform(tf::createQuaternionFromRPY(transformTobeMapped[0], transformTobeMapped[1], transformTobeMapped[2]),
                                                       tf::Vector3(transformTobeMapped[3], transformTobeMapped[4], transformTobeMapped[5]));
@@ -1770,6 +1772,9 @@ public:
         br.sendTransform(trans_odom_to_lidar);
 
         // Publish odometry for ROS (incremental)
+        // 定义静态变量 lastIncreOdomPubFlag ，并初始化为false
+        // 如果为false 则 laserOdomIncremental = laserOdometryROS，这是第一次的位姿
+        // 全局位姿传递给 increOdomAffine
         static bool lastIncreOdomPubFlag = false;
         static nav_msgs::Odometry laserOdomIncremental; // incremental odometry msg
         static Eigen::Affine3f increOdomAffine; // incremental odometry in affine
@@ -1779,10 +1784,13 @@ public:
             laserOdomIncremental = laserOdometryROS;
             increOdomAffine = trans2Affine3f(transformTobeMapped);
         } else {
+            // 变换前的逆 * 变换后的 = 增量变换 affineIncre
             Eigen::Affine3f affineIncre = incrementalOdometryAffineFront.inverse() * incrementalOdometryAffineBack;
+            // 变换后的位姿 increOdomAffine
             increOdomAffine = increOdomAffine * affineIncre;
             float x, y, z, roll, pitch, yaw;
             pcl::getTranslationAndEulerAngles (increOdomAffine, x, y, z, roll, pitch, yaw);
+            // 如果imu可用，则融合imu数据
             if (cloudInfo.imuAvailable == true)
             {
                 if (std::abs(cloudInfo.imuPitchInit) < 1.4)
@@ -1825,12 +1833,15 @@ public:
         if (cloudKeyPoses3D->points.empty())
             return;
         // publish key poses
+        // 发布关键帧位子为全局轨迹
         publishCloud(pubKeyPoses, cloudKeyPoses3D, timeLaserInfoStamp, odometryFrame);
         // Publish surrounding key frames
+        // 发布局部地图
         publishCloud(pubRecentKeyFrames, laserCloudSurfFromMapDS, timeLaserInfoStamp, odometryFrame);
         // publish registered key frame
         if (pubRecentKeyFrame.getNumSubscribers() != 0)
         {
+            // 发布全局下当前帧的线面点云
             pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
             PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
             *cloudOut += *transformPointCloud(laserCloudCornerLastDS,  &thisPose6D);
@@ -1840,6 +1851,7 @@ public:
         // publish registered high-res raw cloud
         if (pubCloudRegisteredRaw.getNumSubscribers() != 0)
         {
+            // 发布全局下的当前帧的原始点云
             pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
             pcl::fromROSMsg(cloudInfo.cloud_deskewed, *cloudOut);
             PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
@@ -1847,6 +1859,7 @@ public:
             publishCloud(pubCloudRegisteredRaw, cloudOut, timeLaserInfoStamp, odometryFrame);
         }
         // publish path
+        // 发布全局路线
         if (pubPath.getNumSubscribers() != 0)
         {
             globalPath.header.stamp = timeLaserInfoStamp;
@@ -1854,6 +1867,7 @@ public:
             pubPath.publish(globalPath);
         }
         // publish SLAM infomation for 3rd-party usage
+        // slam info包括 线面点云
         static int lastSLAMInfoPubSize = -1;
         if (pubSLAMInfo.getNumSubscribers() != 0)
         {

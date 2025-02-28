@@ -471,10 +471,10 @@ public:
         if (int(round(startOdomMsg.pose.covariance[0])) != int(round(endOdomMsg.pose.covariance[0])))
             return;
 
-        // 将startOdomMsg的位姿转为仿射变换矩阵transBegin
+        // 将 startOdomMsg 的位姿转为仿射变换矩阵transBegin
         Eigen::Affine3f transBegin = pcl::getTransformation(startOdomMsg.pose.pose.position.x, startOdomMsg.pose.pose.position.y, startOdomMsg.pose.pose.position.z, roll, pitch, yaw);
 
-        // 将endOdomMsg的位姿转为仿射变换矩阵transEnd
+        // 将 endOdomMsg 的位姿转为仿射变换矩阵 transEnd
         tf::quaternionMsgToTF(endOdomMsg.pose.pose.orientation, orientation);
         tf::Matrix3x3(orientation).getRPY(roll, pitch, yaw);
         Eigen::Affine3f transEnd = pcl::getTransformation(endOdomMsg.pose.pose.position.x, endOdomMsg.pose.pose.position.y, endOdomMsg.pose.pose.position.z, roll, pitch, yaw);
@@ -504,7 +504,7 @@ public:
         }
 
         // 如果 imuPointerCur 中不存在晚于pointTime的数据，或者为空，则rotXCur为imu的位置
-        // 否则， imuPointerBack为imuPointerFront前一个值
+        // 否则， imuPointerBack 为 imuPointerFront 前一个值
         // ratioFront = (pointTime - 前一个imu时间) / (后一个imu时间 - 前一个imu时间)
         // ratioBack = (后一个imu时间 - pointTime) / (后一个imu时间 - 前一个imu时间)
         // rotXCur = 前一个imu位置 * ratioBack + 后一个imu位置 * ratioFront
@@ -565,7 +565,7 @@ public:
         }
 
         // transform points to start
-        // 点i的矩阵transFinal 原点 -> point_i
+        // 点i的矩阵 transFinal 原点 -> point_i
         // 点1到点i的矩阵transBt point1 -> point_i
         Eigen::Affine3f transFinal = pcl::getTransformation(posXCur, posYCur, posZCur, rotXCur, rotYCur, rotZCur);
         Eigen::Affine3f transBt = transStartInverse * transFinal;
@@ -594,7 +594,7 @@ public:
             thisPoint.z = laserCloudIn->points[i].z;
             thisPoint.intensity = laserCloudIn->points[i].intensity;
 
-            // 计算点的距离 range，如果点小于lidarMinRange或大于lidarMaxRange，不进行后续处理
+            // 计算点的距离 range，如果点小于 lidarMinRange 或大于 lidarMaxRange ，不进行后续处理
             float range = pointDistance(thisPoint);
             if (range < lidarMinRange || range > lidarMaxRange)
                 continue;
