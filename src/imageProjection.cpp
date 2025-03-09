@@ -398,7 +398,7 @@ public:
         // 初始odom可使用为false
         cloudInfo.odomAvailable = false;
 
-        // 移除 odomQueue 队列中时间早于timeScanCur - 0.01的数据
+        // 移除 odomQueue 队列中时间早于 timeScanCur - 0.01的数据
         while (!odomQueue.empty())
         {
             if (odomQueue.front().header.stamp.toSec() < timeScanCur - 0.01)

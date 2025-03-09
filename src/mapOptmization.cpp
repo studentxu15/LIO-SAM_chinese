@@ -808,7 +808,7 @@ public:
         // 定义静态矩阵 lastImuTransformation
         static Eigen::Affine3f lastImuTransformation;
         // initialization
-        // 初始化：令 transformTobeMapped 的rpy 为cloudInfo.imu的rpy，即odom坐标系为铅直坐标系
+        // 初始化：令 transformTobeMapped 的rpy 为 cloudInfo.imu 的rpy，即odom坐标系为铅直坐标系
         // 如果 useImuHeadingInitialization 为false 则设初始yaw角为0
         // 将(0,0,0,r,p,y)转换为矩阵 并赋值给 lastImuTransformation 然后返回
         if (cloudKeyPoses3D->points.empty())
